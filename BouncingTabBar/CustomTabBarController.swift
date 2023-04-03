@@ -71,15 +71,15 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
         setupBounceView()
         setupCustomTabBar()
         setupPlusButtonMask()
-        //setupMaskView()
         
-        leftAndRightButtons(hidden: true)
+        //hideButtons(left: true, right: true, center: false)
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        setupButtons()
+        setupLeftAndRightButtons()
+        setupCameraButton()
+        hideButtons(left: true, right: true, center: true)
     }
-    
 
     func setupBounceView() {
         view.addSubview(bounceView)
@@ -90,45 +90,40 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
         view.addSubview(customTabBar)
         customTabBar.anchor(top: nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 128)
         
-        
         customTabBar.items = [item1, item2, item3]
         customTabBar.delegate = self
     }
     
-    
     func setupPlusButtonMask() {
-        
         view.addSubview(plusButtonMask)
         plusButtonMask.translatesAutoresizingMaskIntoConstraints = false
         plusButtonMask.centerXAnchor.constraint(equalTo: self.customTabBar.centerXAnchor).isActive = true
         plusButtonMask.topAnchor.constraint(equalTo: customTabBar.topAnchor, constant: 16).isActive = true
         plusButtonMask.widthAnchor.constraint(equalToConstant: 50).isActive = true
         plusButtonMask.heightAnchor.constraint(equalToConstant: 50).isActive = true
-       //plusButtonMask.addTarget(self, action: #selector(handlePlusPress), for: UIControl.Event.allTouchEvents)
         plusButtonMask.addTarget(self, action: #selector(plusButtonHeldDown), for: UIControl.Event.touchDown)
         plusButtonMask.addTarget(self, action: #selector(plusButtonLifted), for: UIControl.Event.touchUpInside)
     }
  
-    func setupButtons() {
+    func setupLeftAndRightButtons() {
         view.addSubview(photoButton)
-        //view.addSubview(cameraButton)
         view.addSubview(folderButton)
         
-        
         photoButton.frame = CGRect(x: 61, y: customTabBar.frame.origin.y - 53, width: 65.8, height: 53)
-        
         folderButton.frame = CGRect(x: view.frame.size.width - 122, y: customTabBar.frame.origin.y - 52.1, width: 65.8, height: 53)
-        
     }
     
-    func leftAndRightButtons(hidden: Bool) {
-        if hidden {
-            self.photoButton.isHidden = true
-            self.folderButton.isHidden = true
-        } else {
-            self.photoButton.isHidden = false
-            self.folderButton.isHidden = false
-        }
+    func setupCameraButton() {
+        view.addSubview(cameraButton)
+        let camerButtonInitialWidth: CGFloat = 107.57
+        cameraButton.frame = CGRect(x: view.frame.midX - camerButtonInitialWidth/2, y: customTabBar.frame.origin.y - 5 - 50.43, width: 107.57, height: 50.43)
+    }
+    
+ 
+    func hideButtons(left: Bool, right:Bool, center: Bool) {
+        self.photoButton.isHidden = left
+        self.folderButton.isHidden = right
+        self.cameraButton.isHidden = center
     }
   
     
@@ -137,8 +132,8 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
     }
     
     @objc func plusButtonLifted() {
-        self.bounceView.compressToInitialHeightAnimation { (complete) in
-            self.leftAndRightButtons(hidden: false)
+        self.bounceView.expandToInitialHeightAnimation { (complete) in
+            self.hideButtons(left: false, right: false, center: true)
             self.liftLeftAndRightButtons()
         }
     }
@@ -159,21 +154,64 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
             self.folderButton.frame.size.height = 60
             
             print("CustomTabheight: \(self.customTabBar.frame.size.height)")
+            let finalY = self.view.frame.size.height -  self.customTabBar.frame.size.height - 120
+            let jiggleDurations: [TimeInterval] = [0.08, 0.06, 0.04]
             
-            self.bounceView.expandAnimation()
-            
-            UIView.animate(withDuration: 0.05, delay: 0.0, options: .curveEaseOut) {
-                let finalY = self.view.frame.size.height -  self.customTabBar.frame.size.height - 120
-                self.photoButton.frame.origin.y = finalY
-                self.folderButton.frame.origin.y = finalY
+            self.bounceView.expandAnimation { (complete) in
+                self.hideButtons(left: false, right: false, center: false)
+                self.liftCameraButon()
             }
-            
-            
+            UIView.animate(withDuration: 0.08, delay: 0.0, options: .curveEaseOut) {
+                self.photoButton.frame.origin.y = finalY - 8
+                self.folderButton.frame.origin.y = finalY - 8
+            } completion: { (complete) in
+                UIView.animate(withDuration: 0.06, delay: 0, options: .curveEaseOut) {
+                    self.photoButton.frame.origin.y = finalY + 5
+                    self.folderButton.frame.origin.y = finalY + 5
+                } completion: { (completed) in
+                    UIView.animate(withDuration: 0.04, delay: 0, options: .curveEaseOut) {
+                        self.photoButton.frame.origin.y = finalY
+                        self.folderButton.frame.origin.y = finalY
+                    }
+                }
+            }
         }
-        
-        
     }
     
+    func liftCameraButon() {
+        // this animation needs to end at the same time as the left/right buttons
+        // left/right buttons ends at 0.18
+        // this starts at 0.03
+        // anim should take 0.15
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            self.cameraButton.setImage(UIImage(named: "camera")?.withRenderingMode(.alwaysOriginal), for: .normal)
+            self.cameraButton.frame.origin.x = self.view.frame.midX - (72/2)
+            self.cameraButton.frame.origin.y = self.customTabBar.frame.origin.y - 72 - 5
+            self.cameraButton.frame.size.width = 72
+            self.cameraButton.frame.size.height = 72
+            
+            self.bounceView.expandAnimation { (complete) in
+                self.hideButtons(left: false, right: false, center: false)
+                self.bounceView.jiggleAnimation()
+            }
+            let leftRightButtonsY = self.view.frame.size.height -  self.customTabBar.frame.size.height - 120
+            let finalY = leftRightButtonsY - ((72-60) / 2)
+
+            UIView.animate(withDuration: 0.07, delay: 0.0, options: .curveEaseOut) {
+                self.cameraButton.frame.origin.y = finalY - 8
+                
+            } completion: { (complete) in
+                UIView.animate(withDuration: 0.05, delay: 0, options: .curveEaseOut) {
+                    self.cameraButton.frame.origin.y = finalY + 5
+                } completion: { (completed) in
+                    UIView.animate(withDuration: 0.03, delay: 0, options: .curveEaseOut) {
+                        self.cameraButton.frame.origin.y = finalY
+                    }
+                }
+            }
+        }
+    }
     
     
     

@@ -64,12 +64,6 @@ extension UIColor {
     }
 }
 
-//extension UIBezierPath {
-//    
-//    func 
-//}
-
-
 extension UIView {
     func removeAllConstraints() {
         if let _superview = self.superview {
@@ -79,11 +73,3 @@ extension UIView {
     }
 }
 
-//extension UIButton {
-//    func removeAllConstraints() {
-//        if let _superview = self.superview {
-//            self.removeFromSuperview()
-//            _superview.addSubview(self)
-//        }
-//    }
-//}

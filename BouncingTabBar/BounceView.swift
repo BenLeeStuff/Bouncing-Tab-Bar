@@ -326,7 +326,6 @@ class BounceView: UIView {
         CATransaction.begin()
         CATransaction.setCompletionBlock {
             print("compress animation complete")
-            
         }
         let duration: CFTimeInterval = 0.02
         let compressAnimation2 = CABasicAnimation(keyPath: "path")
@@ -340,7 +339,7 @@ class BounceView: UIView {
         CATransaction.commit()
     }
     
-    func compressToInitialHeightAnimation(completed: ((Bool) -> Void)?) {
+    func expandToInitialHeightAnimation(completed: ((Bool) -> Void)?) {
 
         CATransaction.begin()
         CATransaction.setCompletionBlock {
@@ -358,11 +357,28 @@ class BounceView: UIView {
         CATransaction.commit()
     }
     
-    func expandAnimation() {
+    func compressToInitialHeightEndOFJiggleAnimation() {
+        CATransaction.begin()
+        CATransaction.setCompletionBlock {
+            print("compressToInitialHeightEndOFJiggleAnimation animation complete")
+        }
+        let endOfJiggleAnimation = CABasicAnimation(keyPath: "path")
+        let duration: CFTimeInterval = 0.02
+        endOfJiggleAnimation.duration = duration
+        endOfJiggleAnimation.fromValue = expandedBouncePath2().cgPath
+        endOfJiggleAnimation.toValue = initialBouncePath().cgPath
+        endOfJiggleAnimation.fillMode = .forwards
+        endOfJiggleAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+        endOfJiggleAnimation.isRemovedOnCompletion = false
+        shapeLayer.add(endOfJiggleAnimation, forKey: "endOfJiggle")
+        CATransaction.commit()
+    }
+    
+    func expandAnimation(completed: ((Bool) -> Void)?) {
         CATransaction.begin()
         CATransaction.setCompletionBlock {
             print("expand animation complete")
-            //self.compressAnimation2()
+            completed?(true)
         }
         let duration: CFTimeInterval = 0.008
         
@@ -381,7 +397,7 @@ class BounceView: UIView {
         CATransaction.begin()
         CATransaction.setCompletionBlock {
             print("expand animation complete")
-            //self.expandToInitialHeightAnimation()
+            self.compressToInitialHeightEndOFJiggleAnimation()
         }
         let duration: CFTimeInterval = 0.02
         
@@ -393,6 +409,25 @@ class BounceView: UIView {
         expandAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeIn)
         expandAnimation.isRemovedOnCompletion = false
         shapeLayer.add(expandAnimation, forKey: "expand")
+        CATransaction.commit()
+    }
+    
+    func jiggleAnimation() {
+        // this should be called after the path compresses -> returns to initial height -> expands
+        CATransaction.begin()
+        CATransaction.setCompletionBlock {
+            print("compress animation complete")
+            self.expandAnimation2()
+        }
+        let duration: CFTimeInterval = 0.02
+        let compressAnimation2 = CABasicAnimation(keyPath: "path")
+        compressAnimation2.duration = duration
+        compressAnimation2.fromValue = initialBouncePath().cgPath
+        compressAnimation2.toValue = compressedBouncePath2().cgPath
+        compressAnimation2.fillMode = .forwards
+        compressAnimation2.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeIn)
+        compressAnimation2.isRemovedOnCompletion = false
+        shapeLayer.add(compressAnimation2, forKey: "compress2")
         CATransaction.commit()
     }
     
