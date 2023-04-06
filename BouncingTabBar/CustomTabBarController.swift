@@ -27,11 +27,27 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
     
     let plusButtonMask: UIButton = {
         let button = UIButton()
-        button.backgroundColor = .green
+        button.backgroundColor = .white
         
         return button
     }()
     
+    let plusButtonCircularView: UIView = {
+        let v = UIView()
+        v.clipsToBounds = true
+        v.layer.cornerRadius = 20
+        v.backgroundColor = .appBlue()
+        v.alpha = 0.0
+        return v
+    }()
+    
+    let plusButtonIconImageView: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "plusMask")?.withRenderingMode(.alwaysOriginal))
+        
+        return iv
+    }()
+    
+
     let photoButton: UIButton = {
         let b = UIButton()
         b.setImage(UIImage(named: "photoLifting")?.withRenderingMode(.alwaysOriginal), for: .normal)
@@ -40,7 +56,6 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
         return b
     }()
     
-
     let cameraButton: UIButton = {
         let b = UIButton()
         b.setImage(UIImage(named: "cameraLifting")?.withRenderingMode(.alwaysOriginal), for: .normal)
@@ -75,22 +90,13 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
 
         return b
     }()
-    
-    let maskView:UIView = {
-        let v = UIView()
-        return v
-    }()
-    
-//    var maskTapGestureRecognizer = UITapGestureRecognizer()
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .appBlue()
-        //setupBounceView()
-        //setupCustomTabBar()
-        //setupPlusButtonMask()
-        
+
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -103,12 +109,6 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
         setupPlusButtonMask()
         self.delegate = self
         customTabBar.delegate = self
-
-//        let b = UIButton()
-//        b.backgroundColor = .red
-//        b.addTarget(self, action: #selector(testb), for: .touchUpInside)
-//        view.addSubview(b)
-//        b.anchor(top: view.topAnchor, left: view.leftAnchor, bottom: nil, right: nil, paddingTop: 200, paddingLeft: 50, paddingBottom: 0, paddingRight: 0, width: 50, height: 50)
     }
     
    
@@ -129,11 +129,23 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
         view.addSubview(plusButtonMask)
         plusButtonMask.translatesAutoresizingMaskIntoConstraints = false
         plusButtonMask.centerXAnchor.constraint(equalTo: self.customTabBar.centerXAnchor).isActive = true
-        plusButtonMask.topAnchor.constraint(equalTo: customTabBar.topAnchor, constant: 16).isActive = true
-        plusButtonMask.widthAnchor.constraint(equalToConstant: 50).isActive = true
-        plusButtonMask.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        plusButtonMask.topAnchor.constraint(equalTo: customTabBar.topAnchor, constant: 20).isActive = true
+        plusButtonMask.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        plusButtonMask.heightAnchor.constraint(equalToConstant: 40).isActive = true
         plusButtonMask.addTarget(self, action: #selector(plusButtonHeldDown), for: UIControl.Event.touchDown)
         plusButtonMask.addTarget(self, action: #selector(plusButtonLifted), for: UIControl.Event.touchUpInside)
+        
+        plusButtonMask.addSubview(plusButtonCircularView)
+        plusButtonCircularView.anchor(top: plusButtonMask.topAnchor, left: plusButtonMask.leftAnchor, bottom: plusButtonMask.bottomAnchor, right: plusButtonMask.rightAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
+        
+        plusButtonMask.addSubview(plusButtonIconImageView)
+        plusButtonIconImageView.anchor(top: plusButtonMask.topAnchor, left: plusButtonMask.leftAnchor, bottom: plusButtonMask.bottomAnchor, right: plusButtonMask.rightAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
+        
+        plusButtonIconImageView.isUserInteractionEnabled = false
+        plusButtonCircularView.isUserInteractionEnabled = false
+        
+        
+    
     }
  
     func setupLeftAndRightButtons() {
@@ -159,8 +171,6 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
             folderIconImageView.anchor(top: folderButton.topAnchor, left: folderButton.leftAnchor, bottom: folderButton.bottomAnchor, right: folderButton.rightAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
             folderIconImageView.alpha = 0
         }
-        
-        
     }
     
     
@@ -189,12 +199,21 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
   
     @objc func plusButtonHeldDown() {
         self.bounceView.compressAnimation()
+        
+        UIView.animate(withDuration: 0.3, delay: 0) {
+            self.plusButtonCircularView.alpha = 0.1
+        }
     }
     
     @objc func plusButtonLifted() {
         
         if !buttonsShowing {
             // buttons not on screen, animate in
+            UIView.animate(withDuration: 0.3, delay: 0) {
+                self.plusButtonIconImageView.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi/4))
+                self.plusButtonCircularView.alpha = 0
+            }
+            
             self.bounceView.expandToInitialHeightAnimation { (complete) in
                 UIView.animate(withDuration: 0.2, delay: 0.1, options: .curveEaseOut) {
                     self.photoIconImageView.alpha = 1.0
@@ -205,6 +224,10 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
             }
         } else {
             // button on screen, animate out
+            UIView.animate(withDuration: 0.3, delay: 0) {
+                self.plusButtonIconImageView.transform = CGAffineTransform(rotationAngle: 0)
+                self.plusButtonCircularView.alpha = 0
+            }
             self.lowerSideButtons()
             self.bounceView.expandToInitialHeightAnimation { (complete) in
                 
@@ -328,6 +351,11 @@ class CustomTabBarController: UITabBarController, UITabBarControllerDelegate {
             self.hideButtons(left: true, right: true, center: true)
             self.bounceView.jiggleAnimation()
         }
+    }
+    
+    func rotatePlusButtonMask() {
+        //self.yourLayerName.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi/4))
+
     }
     
 }
