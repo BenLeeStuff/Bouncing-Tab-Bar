@@ -73,3 +73,31 @@ extension UIView {
     }
 }
 
+extension UIButton {
+    func setAttributes(isLifting: Bool) {
+        if isLifting {
+            self.backgroundColor = .white
+            self.layer.cornerRadius = 72/2
+            self.alpha = 0.35
+            self.clipsToBounds = true
+        } else {
+            self.backgroundColor = .clear
+            self.layer.cornerRadius = 0
+            self.alpha = 1
+            self.clipsToBounds = true
+        }
+    }
+    
+    public func animateAlpha(isLifting: Bool) {
+        if isLifting {
+            UIView.animate(withDuration: 0.5, delay: 0) {
+                self.alpha = 1
+            }
+        } else {
+            UIView.animate(withDuration: 0.2, delay: 0) {
+                self.alpha = 0.35
+            }
+        }
+    }
+}
+
